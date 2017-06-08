@@ -31,5 +31,4 @@ public class User {
     public void setUserAddress(String userAddress) {
         this.userAddress = userAddress;
     }
-    public
 }
