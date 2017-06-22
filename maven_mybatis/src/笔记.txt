@@ -1,0 +1,225 @@
+2017/06/22
+mybatis学习笔记
+
+mybatis-config配置:
+<bean id="sqlSession"
+--id是class所指向类的别名
+class="org.mybatis.spring.SqlSessionTemplate">
+   <constructor-arg index="0" ref="sqlSessionFactory" />
+</bean>
+获取配置文件:
+	private static SqlSessionFactory sqlSessionFactory;
+    private static Reader reader;
+
+//  获取配置文件
+    static{
+        try{
+            reader    = Resources.getResourceAsReader("mybatis-config.xml");
+            sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+	public static SqlSessionFactory getSession(){
+        return sqlSessionFactory;
+    }
+
+今天完成的事情： 
+	今天重新学习了一遍mybatis,因为25题需要mybatis连接池的知识
+	最后把学到的总结一下:
+		mybatis有以下几个文件
+			表结构文件
+				存放Set和Get方法
+				例如:
+				public class User {
+
+					private int id;
+					private String userName;
+					private int userAge;
+					private String userAddress;
+
+					public int getId() {
+						return id;
+					}
+					public void setId(int id) {
+						this.id = id;
+					}
+					public String getUserName() {
+						return userName;
+					}
+					public void setUserName(String userName) {
+						this.userName = userName;
+					}
+					public int getUserAge() {
+						return userAge;
+					}
+					public void setUserAge(int userAge) {
+						this.userAge = userAge;
+					}
+					public String getUserAddress() {
+						return userAddress;
+					}
+					public void setUserAddress(String userAddress) {
+						this.userAddress = userAddress;
+					}
+					public String toString(){
+						return "id:"+id+"  名字:"+userName+"  地址:"+userAddress;
+					}
+				}
+
+			数据库操作方法的接口
+			例如:
+			import java.util.List;
+
+			public interface IUserOperation {
+				public User selectUserByID(int id);
+				public List selectUsers(String userName);
+				public void addUser(User user);
+				public void deleteUser(int id);
+				public void updateUser(User user);
+				public List<Article> getUserArticles(int id);
+
+			}
+			mybatis-config.xml文件
+			首先是开头
+			<?xml version="1.0" encoding="UTF-8" ?>
+			<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+			"http://mybatis.org/dtd/mybatis-3-config.dtd">
+			然后是
+			<typeAliases>
+			<!--这里的alias是表数据文件所在位置的别名-->
+			<typeAlias alias="User" type="com.yihaomen.mybatis.model.User"/>
+			</typeAliases>
+			再然后就是数据库的用户名和密码驱动
+			<environments default="development">
+				<environment id="development">
+				<transactionManager type="JDBC"/>
+				<dataSource type="POOLED">
+					<property name="driver" value="com.mysql.jdbc.Driver"/>
+					<property name="url" value="jdbc:mysql://127.0.0.1:3306/test" />
+					<property name="username" value="root"/>
+					<property name="password" value="123456"/>
+					</dataSource>
+				</environment>
+			</environments>
+			最后是
+			<mappers>
+			<!--sql命令配置文件所在位置-->
+			<mapper resource=
+			"com/yihaomen/mybatis/model/User.xml"/>
+			</mappers>
+			SQl命令配置文件
+			<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yihaomen.mybatis.inter.IUserOperation">
+    <select id="selectUserByID" parameterType="int" resultType="User">
+        select * from `user` where id = #{id}
+    </select>
+    <!-- 为了返回list 类型而定义的returnMap -->
+    <resultMap type="User" id="resultListUser">
+        <id column="id" property="id" />
+        <result column="userName" property="userName" />
+        <result column="userAge" property="userAge" />
+        <result column="userAddress" property="userAddress" />
+    </resultMap>
+    <!-- 返回list 的select 语句，注意 resultMap 的值是指向前面定义好的 -->
+    <select id="selectUsers" parameterType="string" resultMap="resultListUser">
+        select * from user where userName like #{userName}
+    </select>
+    <!--执行增加操作的SQL语句。id和parameterType
+       分别与IUserOperation接口中的addUser方法的名字和
+       参数类型一致。以#{name}的形式引用Student参数
+       的name属性，MyBatis将使用反射读取Student参数
+       的此属性。#{name}中name大小写敏感。引用其他
+       的gender等属性与此一致。seGeneratedKeys设置
+       为"true"表明要MyBatis获取由数据库自动生成的主
+       键；keyProperty="id"指定把获取到的主键值注入
+       到Student的id属性-->
+    <insert id="addUser" parameterType="User"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into user(userName,userAge,userAddress)
+        values(#{userName},#{userAge},#{userAddress})
+    </insert>
+    <delete id="deleteUser" parameterType="int">
+        delete from user where id=#{id}
+    </delete>
+    <update id="updateUser" parameterType="User" >
+        update user set userName=#{userName},userAge=#{userAge},userAddress=#{userAddress} where id=#{id}
+    </update>
+
+    <!-- User 联合文章进行查询 方法之一的配置 (多对一的方式)  -->
+    <resultMap id="resultUserArticleList" type="Article"><!--这里的type是Article类所在位置的别名-->
+        <id property="id" column="aid" />
+        <result property="title" column="title" />
+        <result property="content" column="content" />
+
+        <association property="user" javaType="User">
+            <id property="id" column="id" />
+            <result property="userName" column="userName" />
+            <result property="userAddress" column="userAddress" />
+        </association>
+    </resultMap>
+    <select id="getUserArticles" parameterType="int" resultMap="resultUserArticleList">
+        select user.id,user.userName,user.userAddress,article.id aid,article.title,article.content from user,article
+        where user.id=article.userid and user.id=#{id}
+    </select>
+</mapper>
+			Test测试文件
+public class Test {
+private static SqlSessionFactory sqlSessionFactory;
+private static Reader reader;
+
+//  获取配置文件
+    static{
+        try{
+            reader    = Resources.getResourceAsReader("mybatis-config.xml");
+			//根据名称获取配置文件
+            sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+//  接口sqlSessionFactory
+    public static SqlSessionFactory getSession(){
+        return sqlSessionFactory;
+    }
+
+//  main方法
+    public static void main(String[] args) {
+        Test testUser=new Test();
+        //testUser.updateUser();
+        //testUser.getUserList("%");
+        //testUser.getUserArticles(1);
+        testUser.addUser();
+    }
+
+//  获取
+    public void getUserList(String userName){
+		
+        SqlSession session = sqlSessionFactory.openSession();
+        //sqlSessionFactory.openSession();
+        try {
+            IUserOperation userOperation=session.getMapper(IUserOperation.class);
+            List<User> users = userOperation.selectUsers(userName);
+            for(User user:users){
+                System.out.println(user.toString());
+            }
+
+        } finally {
+            session.close();
+        }
+    }
+			
+			
+			
+明天计划的事情：
+	虽然对mybatis更深入的了解了但是对mybatis连接池还是一头雾水
+遇到的问题：
+	无
+收获：
+	对mybatis的理解更透彻了
+
+

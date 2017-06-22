@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+   http://www.springframework.org/schema/beans
+   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+   http://www.springframework.org/schema/aop
+   http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+   http://www.springframework.org/schema/tx
+   http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+   http://www.springframework.org/schema/context
+   http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+    <!--<bean name="c" class="com.fanchen.code.Category">-->
+    <!--<property name="name" value="yyy" />-->
+    <!--</bean>-->
+
+    <!--<bean name="p" class="com.fanchen.code.Product">-->
+    <!--<property name="name" value="product1" />-->
+    <!--<property name="category" ref="c" />-->
+    <!--</bean>-->
+    <bean id="s" class="com.fanchen.code.ProductService"/>
+    <bean id="loge" class="com.fanchen.code.LoggerAspect"/>
+    <aop:config>
+        <aop:pointcut id="loggerCutPoint" expression="execution(* com.fanchen.code.ProductService.*(..))"/>
+        <aop:aspect id="logAspect" ref="loge">
+
+            <aop:before pointcut-ref="loggerCutPoint" method="before1"/>
+            <!--前置-->
+            <aop:around pointcut-ref="loggerCutPoint" method="around1"/>
+            <!--环绕-->
+            <aop:after pointcut-ref="loggerCutPoint" method="after1"/>
+            <!--后置-->
+        </aop:aspect>
+    </aop:config>
+</beans>
