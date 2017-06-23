@@ -1,6 +1,8 @@
 package com.yihaomen.test;
 
 import java.io.Reader;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 import com.yihaomen.mybatis.inter.IUserOperation;
@@ -31,17 +33,9 @@ public class Test {
         return sqlSessionFactory;
     }
 
-//  main方法
-    public static void main(String[] args) {
-        Test testUser=new Test();
-        //testUser.updateUser();
-        //testUser.getUserList("%");
-        //testUser.getUserArticles(1);
-        testUser.addUser();
-    }
-
 //  获取
-    public void getUserList(String userName){
+    public void getUserList(String userName) throws SQLException {
+
         SqlSession session = sqlSessionFactory.openSession();
         //sqlSessionFactory.openSession();
         try {
@@ -61,12 +55,13 @@ public class Test {
         user.setUserAddress("人民广场");
         user.setUserName("飞鸟");
         user.setUserAge(80);
+
         SqlSession session = sqlSessionFactory.openSession();
         try {
             IUserOperation userOperation=session.getMapper(IUserOperation.class);
             userOperation.addUser(user);
             session.commit();
-            System.out.println("当前增加的用户 id为:"+user.getId());
+           // System.out.println("当前增加的用户 id为:"+user.getId());
         } finally {
             session.close();
         }
