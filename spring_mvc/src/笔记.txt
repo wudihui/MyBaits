@@ -1,0 +1,17 @@
+今天完成的事情：
+    学习StringMVC,学习RequestMapping映射提交的GET和POST的用法,和之前学习的HTML融会贯通
+    <form action="name" method="POST">
+    这段代码是表示以POST提交的方式把数据提交到name页面
+
+
+明天计划的事情：
+    学习读写数据库
+
+遇到的问题：
+    用GET方式提交数据时,地址栏不显示提交的数据,页面报404,找了很长时间,
+    发现是<input type="xx" name="xx">中的name写成了value,然后用post
+    提交报不能应用GET方法的错误(忘记截图了),后来发现是提交数据的页面必须是
+    GET方法提交,接受数据页面的如果不想显示的话用POST,显示的话用GET
+
+收获：
+    理解并且实践了RESTful接口
